@@ -24,6 +24,6 @@ def get_priority_score():
     )
 
     score = int(response.choices[0].message.content)
-    return jsonify({"score": score})
+    return jsonify({"priority_score": score})
 
 app.run(port=os.getenv("ML_CLIENT_PORT"))

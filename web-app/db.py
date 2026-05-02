@@ -39,6 +39,7 @@ def create_indexes() -> None:
 
     # Indexes for task priority and status
     tasks.create_index([("user_id", 1)])
+    tasks.create_index([("due_date", 1)])
     tasks.create_index([("priority", 1)])
     tasks.create_index([("status", 1)])
     tasks.create_index([("created_at", -1)])
@@ -51,12 +52,13 @@ def build_user_document(username: str, email: str, hashed_password: str) -> dict
         "created_at": datetime.now(timezone.utc),
     }
 
-def build_task_document(user_id: str, title: str, description: str, priority: str) -> dict:
+def build_task_document(user_id: str, title: str, description: str, due_date: datetime, priority: int) -> dict:
     return {
         "user_id": ObjectId(user_id),
         "title": title.strip(),
         "description": description.strip(),
-        "priority": priority.strip().title(),
+        "due_date": due_date,
+        "priority": priority,
         "status": "Pending",
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
@@ -67,8 +69,8 @@ def insert_user(username: str, email: str, hashed_password: str) -> str:
     result = users_collection().insert_one(user_doc)
     return str(result.inserted_id)
 
-def insert_task(user_id: str, title: str, description: str, priority: str) -> str:
-    task_doc = build_task_document(user_id, title, description, priority)
+def insert_task(user_id: str, title: str, description: str, due_date: datetime, priority: int) -> str:
+    task_doc = build_task_document(user_id, title, description, due_date, priority)
     result = tasks_collection().insert_one(task_doc)
     return str(result.inserted_id)
 

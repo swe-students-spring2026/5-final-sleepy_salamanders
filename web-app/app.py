@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime, timezone
 from flask import Flask, render_template, redirect, request, url_for, flash
 from flask_bcrypt import Bcrypt
 from flask_login import (
@@ -35,7 +36,7 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 # ML Client URL (You can change this if you have the ML client running somewhere else)
-ML_CLIENT_URL = os.getenv("ML_CLIENT_URL", "http://localhost:5000")
+# ML_CLIENT_URL = os.getenv("ML_CLIENT_URL", "http://localhost:5000")
 
 # User class for Flask-Login
 class User(UserMixin):
@@ -147,7 +148,13 @@ def create_task():
         flash("Title and description are required.")
         return redirect(url_for("create_task"))
 
-    priority = get_priority_from_ml_client(title, description)
+    due_date: datetime = None # TODO: get from post request
+    days_to_complete = (due_date - datetime.now(timezone.utc)).days
+
+    priority = get_priority_from_ml_client(title, description, days_to_complete)
+    
+    if(priority == None):
+        priority = 0 # TODO: handle error, if unable to determine priority
 
     # Insert the task into the database
     insert_task(user_id=current_user.id, title=title, description=description, priority=priority)
@@ -173,28 +180,27 @@ def remove_task(task_id):
     return redirect(url_for("dashboard"))
 
 # Helper function to call ML Client and get priority
-def get_priority_from_ml_client(title: str, description: str) -> str:
+# TODO: pass title to ml client?
+def get_priority_from_ml_client(title: str, description: str, days_to_complete: int) -> int:
     try:
-        # Make a POST request to the ML client with the task title and description
         response = requests.post(
-            f"{ML_CLIENT_URL}/prioritize",
-            json={"title": title, "description": description},
-            timeout=5,
+            "http://" + os.getenv("ML_CLIENT_HOSTNAME") + ":" + os.getenv("ML_CLIENT_PORT") + "/api/get_priority_score",
+            json={
+                "task_description": description,
+                "task_days_to_complete": days_to_complete
+            }
+            # TODO: timeout=ML_CLIENT_TIMEOUT_SECONDS,
         )
-        response.raise_for_status()
-
-        # Get priority from ML client response (should be 'High', 'Medium', or 'Low')
-        data = response.json()
-        priority = data.get("priority", "Medium").title()
-
-        if priority not in {"High", "Medium", "Low"}:
-            return "Medium"
-
-        return priority
-
     except requests.RequestException:
-        # If the ML client call fails, return 'Medium' by default
-        return "Medium"
+        return None
+
+    if(response.status_code != 200):
+        return None
+
+    try:
+        return response.json().get("priority_score")
+    except ValueError:
+        return None
 
 # Run the Flask app
 if __name__ == "__main__":
