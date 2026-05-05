@@ -26,4 +26,6 @@ def get_priority_score():
     score = int(response.choices[0].message.content)
     return jsonify({"score": score})
 
-app.run(port=os.getenv("ML_CLIENT_PORT"))
+if __name__ == "__main__":
+    port = int(os.getenv("ML_CLIENT_PORT", 5001))
+    app.run(host="0.0.0.0", port=port)
