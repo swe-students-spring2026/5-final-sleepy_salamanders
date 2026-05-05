@@ -32,7 +32,7 @@ This single startup command securely initializes:
 - A `mongodb` container storing the tasks and users natively mapped to port `27017`
 
 
-### 2. Start Drawing
+### 2. Start Adding Tasks
 Once the instances are running, open your web browser to view the application:
 [http://localhost:5000](http://localhost:5000)
 
