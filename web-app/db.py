@@ -7,9 +7,6 @@ from pymongo.database import Database
 from bson import ObjectId
 
 
-# =========================
-# CONNECTION SETUP
-# =========================
 def get_mongo_uri() -> str:
     mongo_uri = os.getenv("MONGODB_URI")
     if not mongo_uri:
@@ -41,9 +38,6 @@ def tasks_collection() -> Collection:
     return get_database()["tasks"]
 
 
-# =========================
-# INDEXES
-# =========================
 def create_indexes() -> None:
     users = users_collection()
     tasks = tasks_collection()
@@ -57,9 +51,6 @@ def create_indexes() -> None:
     tasks.create_index([("created_at", -1)])
 
 
-# =========================
-# DOCUMENT BUILDERS
-# =========================
 def build_user_document(username: str, email: str, hashed_password: str) -> dict:
     return {
         "username": username.strip(),
@@ -82,9 +73,6 @@ def build_task_document(user_id: str, title: str, description: str, due_date: st
     }
 
 
-# =========================
-# CREATE
-# =========================
 def insert_user(username: str, email: str, hashed_password: str) -> str:
     user_doc = build_user_document(username, email, hashed_password)
     result = users_collection().insert_one(user_doc)
@@ -97,9 +85,6 @@ def insert_task(user_id: str, title: str, description: str, due_date: str, prior
     return str(result.inserted_id)
 
 
-# =========================
-# READ
-# =========================
 def get_tasks_for_user(user_id: str) -> list:
     tasks = list(tasks_collection().find({"user_id": ObjectId(user_id)}))
 
@@ -129,9 +114,6 @@ def find_user_by_id(user_id: str):
     return users_collection().find_one({"_id": ObjectId(user_id)})
 
 
-# =========================
-# UPDATE
-# =========================
 def update_task(task_id: str, user_id: str, title: str, description: str, due_date: str, priority: str) -> bool:
     result = tasks_collection().update_one(
         {"_id": ObjectId(task_id), "user_id": ObjectId(user_id)},
@@ -174,9 +156,6 @@ def update_user_profile(user_id: str, username: str, email: str) -> bool:
     return result.modified_count == 1
 
 
-# =========================
-# DELETE
-# =========================
 def delete_task(task_id: str, user_id: str) -> bool:
     result = tasks_collection().delete_one({
         "_id": ObjectId(task_id),
