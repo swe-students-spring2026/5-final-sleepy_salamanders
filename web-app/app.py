@@ -22,8 +22,8 @@ from db import (
     find_user_by_id,
     update_user_profile,
     delete_user_profile,
-    update_task,  # ✅ NEW (you need to add this in db.py)
-    find_task_by_id,  # ✅ NEW (you need to add this in db.py)
+    update_task,
+    find_task_by_id,
 )
 from dotenv import load_dotenv
 
@@ -41,9 +41,6 @@ login_manager.login_view = "login"
 ML_CLIENT_URL = os.getenv("ML_CLIENT_URL", "http://localhost:8081")
 
 
-# =========================
-# USER MODEL
-# =========================
 class User(UserMixin):
     def __init__(self, user_doc: dict):
         self.id = str(user_doc["_id"])
@@ -64,9 +61,6 @@ def setup_database():
     create_indexes()
 
 
-# =========================
-# AUTH ROUTES
-# =========================
 @app.route("/")
 def home():
     if current_user.is_authenticated:
@@ -129,9 +123,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-# =========================
-# DASHBOARD
-# =========================
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -139,9 +130,6 @@ def dashboard():
     return render_template("dashboard.html", tasks=tasks)
 
 
-# =========================
-# PROFILE
-# =========================
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
@@ -176,9 +164,6 @@ def delete_profile():
     return redirect(url_for("login"))
 
 
-# =========================
-# CREATE TASK
-# =========================
 @app.route("/create", methods=["GET", "POST"])
 @login_required
 def create_task():
@@ -211,16 +196,13 @@ def create_task():
         user_id=current_user.id,
         title=title,
         description=description,
-        due_date=due_date,  # ✅ IMPORTANT (you weren’t saving this before)
+        due_date=due_date,
         priority=priority
     )
 
     return redirect(url_for("dashboard"))
 
 
-# =========================
-# ✅ EDIT TASK (NEW)
-# =========================
 @app.route("/edit_task/<task_id>", methods=["GET", "POST"])
 @login_required
 def edit_task(task_id):
@@ -246,7 +228,6 @@ def edit_task(task_id):
             flash("Invalid due date.")
             return redirect(url_for("edit_task", task_id=task_id))
 
-        # ✅ recompute priority
         priority = get_priority_from_ml_client(title, description, days_to_complete)
 
         update_task(
@@ -263,9 +244,6 @@ def edit_task(task_id):
     return render_template("edit_task.html", task=task)
 
 
-# =========================
-# TASK ACTIONS
-# =========================
 @app.route("/complete/<task_id>", methods=["POST"])
 @login_required
 def complete_task(task_id):
@@ -282,9 +260,6 @@ def remove_task(task_id):
     return redirect(url_for("dashboard"))
 
 
-# =========================
-# ML PRIORITY
-# =========================
 def get_priority_from_ml_client(title: str, description: str, days_to_complete: int) -> str:
     try:
         response = requests.post(
@@ -310,8 +285,5 @@ def get_priority_from_ml_client(title: str, description: str, days_to_complete: 
         return "Medium"
 
 
-# =========================
-# RUN
-# =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
