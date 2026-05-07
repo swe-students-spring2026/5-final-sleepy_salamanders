@@ -74,7 +74,7 @@ def build_task_document(user_id: str, title: str, description: str, due_date: st
         "user_id": ObjectId(user_id),
         "title": title.strip(),
         "description": description.strip(),
-        "due_date": due_date,  # ✅ NEW
+        "due_date": due_date,
         "priority": priority.strip().title(),
         "status": "Pending",
         "created_at": datetime.now(timezone.utc),

@@ -22,8 +22,8 @@ from db import (
     find_user_by_id,
     update_user_profile,
     delete_user_profile,
-    update_task,  # ✅ NEW (you need to add this in db.py)
-    find_task_by_id,  # ✅ NEW (you need to add this in db.py)
+    update_task,
+    find_task_by_id,
 )
 from dotenv import load_dotenv
 
@@ -211,7 +211,7 @@ def create_task():
         user_id=current_user.id,
         title=title,
         description=description,
-        due_date=due_date,  # ✅ IMPORTANT (you weren’t saving this before)
+        due_date=due_date,
         priority=priority
     )
 
@@ -219,7 +219,7 @@ def create_task():
 
 
 # =========================
-# ✅ EDIT TASK (NEW)
+# EDIT TASK
 # =========================
 @app.route("/edit_task/<task_id>", methods=["GET", "POST"])
 @login_required
@@ -246,7 +246,6 @@ def edit_task(task_id):
             flash("Invalid due date.")
             return redirect(url_for("edit_task", task_id=task_id))
 
-        # ✅ recompute priority
         priority = get_priority_from_ml_client(title, description, days_to_complete)
 
         update_task(
